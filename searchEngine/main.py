@@ -1,4 +1,3 @@
-from nltk.stem import PorterStemmer
 from inverted_index import InvertedIndex
 import os.path
 
