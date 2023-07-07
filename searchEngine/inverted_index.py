@@ -16,18 +16,12 @@ class InvertedIndex:
         self.inverted_index = defaultdict(list)  # map term to its posting
         self.term_pos = dict()        # map term to position in disk
 
-    def init_index_dir(self):
+    def init_index_dir(self) -> None:
         # clear/create directory to store partial + combined inverted index
         shutil.rmtree("../index", ignore_errors=True)
         os.makedirs("../index")
 
-    def get_termPos(self):
-        return self.term_pos
-
-    def get_docURL(self):
-        return self.doc_url
-
-    def build_index(self):
+    def build_index(self) -> None:
         print(f"Building Index...")
         for root, dirs, files in os.walk(self.docs_dir):
             print(f"current root: {root}")
@@ -60,7 +54,12 @@ class InvertedIndex:
         self.merge_index_blocks()
         print("Finished Building Index.")
 
-    def analyze_file(self, data):
+        # Store important attributes in a file
+        with open(f"../index/inverted_index_variables.txt", 'w') as f:
+            f.write(str(self.doc_url) + "\n")
+            f.write(str(self.term_pos) + "\n")
+    
+    def analyze_file(self, data) -> None:
         # Extract the content
         html_raw_content = data['content']
         soup = BeautifulSoup(html_raw_content, 'html.parser')
@@ -93,7 +92,7 @@ class InvertedIndex:
             }
             self.inverted_index[word].append(posting)
 
-    def merge_index_blocks(self):
+    def merge_index_blocks(self) -> None:
         # Open all partial index files and maintain a read buffer for each one
         read_buffer = []
         for file in os.listdir("../index"):
@@ -109,6 +108,7 @@ class InvertedIndex:
             line = f.readline().rstrip('\n')
             postings_buffer.append(eval(line))
 
+        # Variable to keep track of where the term will be located on file
         position = 0
 
         while len(read_buffer) > 0:
@@ -116,6 +116,8 @@ class InvertedIndex:
             term_list = [list(posting.keys())[0]
                          for posting in postings_buffer]
             smallest_term = min(term_list)
+
+            # Values will be used to store all postings for the smallest term
             values = []
 
             # If term in multiple files, combine postings; append term + posting to file
@@ -130,6 +132,7 @@ class InvertedIndex:
                     else:
                         postings_buffer[i] = eval(line)
 
+            # sort the postings by doc_id and then put in the write_buffer
             values = sorted(values, key=lambda x: x["doc_id"])
             write_buffer[smallest_term] = values
 
@@ -149,22 +152,15 @@ class InvertedIndex:
             self.store_in_disk(filepath, write_buffer)
             write_buffer.clear()
 
-        # print(self.term_pos)
-
     @staticmethod
-    def store_in_disk(filepath, info):
+    def store_in_disk(filepath, info) -> None:
         # Sort posting/info by doc_id and add to file
         with open(filepath, 'a') as f:
             for k, v in sorted(info.items()):
                 f.write("{" + f'"{k}": {v}' + "}\n")
 
-            # sort posting by doc_id -> sort by term -> add to file
-            # for k, v in sorted(info.items()):
-            #     sorted_values = sorted(v, key=lambda x: x["doc_id"])
-            #     f.write("{" + f'"{k}": {sorted_values}' + "}\n")
-
     @staticmethod
-    def stem(word):
+    def stem(word) -> str:
         strip_word = word.strip(string.punctuation +
                                 string.whitespace + "‘’“”")
         stem_word = PorterStemmer().stem(strip_word)
