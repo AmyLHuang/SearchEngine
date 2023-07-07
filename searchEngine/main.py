@@ -1,12 +1,16 @@
 from inverted_index import InvertedIndex
-import os.path
+import os
 
 
-def initialize_index():
-    indexExists = os.path.exists("index")
-    if indexExists == False:
-        ii = InvertedIndex("../documents/analyst/ANALYST")
+def initialize_index(flag=False):
+    indexExists = os.path.exists("../index")
+    if not indexExists or flag:
+        print("Create index")
+        ii = InvertedIndex("../documents/test")
+        ii.init_index_dir()
         ii.build_index()
+    else:
+        print("Index already exists.")
 
 
 if __name__ == "__main__":
