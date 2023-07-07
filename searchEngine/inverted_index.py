@@ -3,13 +3,12 @@ import json
 import shutil
 from bs4 import BeautifulSoup
 from nltk.stem import PorterStemmer
-from posting import Posting
 from collections import defaultdict
 import string
 
 
 class InvertedIndex:
-    def __init__(self, docs_dir, block_size=10):
+    def __init__(self, docs_dir, block_size=1000):
         self.docs_dir = docs_dir      # directory where documents are stored
         self.block_size = block_size  # block size to write to disk
         self.doc_id = 0               # will be used to give unique id to each document
@@ -65,7 +64,7 @@ class InvertedIndex:
             ['h1', 'h2', 'h3', 'b', 'strong', 'i', 'em', 'mark', 'title', 'a'])
         for element in important_elements:
             for word in element.text.split():
-                stemmed_word = InvertedIndex.stem(word)
+                stemmed_word = self.stem(word)
                 if len(stemmed_word) >= 2:
                     important_words.add(stemmed_word)
 
@@ -73,25 +72,45 @@ class InvertedIndex:
         word_count = defaultdict(int)
         for str in soup.stripped_strings:
             for word in str.split():
-                stemmed_word = InvertedIndex.stem(word)
+                stemmed_word = self.stem(word)
                 if len(stemmed_word) >= 2:
                     word_count[stemmed_word] += 1
 
         # Update the inverted index by adding postings
         for word in word_count.keys():
-            posting = Posting(
-                self.doc_id, word_count[word], word in important_words)
+            posting = {
+                'doc_id': self.doc_id,
+                'tf': word_count[word],
+                'important': word in important_words,
+            }
             self.inverted_index[word].append(posting)
 
-    def merge_index_blocks():
-        pass
+    def merge_index_blocks(self):
+        # Open all partial index files and maintain a read buffer for each one
+        read_buffer = []
+        for file in os.listdir("../index"):
+            if file.startswith("index_block_"):
+                read_buffer.append(open(f"../index/{file}", 'r'))
+
+        # Posting buffer stores the current postings we're reading in each file
+        posting_buffer = []
+
+        # Put in the first term from each file into the term_buffer
+        for f in read_buffer:
+            line = f.readline().rstrip('\n')
+            posting_buffer.append(eval(line))
+
+        # Maintain a write buffer for the output files
+        print(posting_buffer)
+        position = 0
 
     @staticmethod
     def store_in_disk(filepath, info):
         with open(filepath, 'a') as f:
             # sort posting by doc_id -> sort by term -> add to file
             for k, v in sorted(info.items()):
-                f.write("{" + f'"{k}": {sorted(v)}' + "}\n")
+                sorted_values = sorted(v, key=lambda x: x["doc_id"])
+                f.write("{" + f'"{k}": {sorted_values}' + "}\n")
 
     @staticmethod
     def stem(word):

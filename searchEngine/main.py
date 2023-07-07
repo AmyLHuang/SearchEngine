@@ -4,9 +4,10 @@ import os
 
 def initialize_index(flag=False):
     indexExists = os.path.exists("../index")
-    if not indexExists or flag:
+    # if not indexExists or flag:
+    if True:
         print("Create index")
-        ii = InvertedIndex("../documents/test")
+        ii = InvertedIndex("../documents/test", 10)
         ii.init_index_dir()
         ii.build_index()
     else:
