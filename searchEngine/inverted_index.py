@@ -14,11 +14,18 @@ class InvertedIndex:
         self.doc_id = 0               # will be used to give unique id to each document
         self.doc_url = dict()         # map doc_id to the url
         self.inverted_index = defaultdict(list)  # map term to its posting
+        self.term_pos = dict()        # map term to position in disk
 
     def init_index_dir(self):
         # clear/create directory to store partial + combined inverted index
         shutil.rmtree("../index", ignore_errors=True)
         os.makedirs("../index")
+
+    def get_termPos(self):
+        return self.term_pos
+
+    def get_docURL(self):
+        return self.doc_url
 
     def build_index(self):
         print(f"Building Index...")
@@ -74,7 +81,8 @@ class InvertedIndex:
             for word in str.split():
                 stemmed_word = self.stem(word)
                 if len(stemmed_word) >= 2:
-                    word_count[stemmed_word] += 1
+                    new_stemmed_word = stemmed_word.replace('"', "'")
+                    word_count[new_stemmed_word] += 1
 
         # Update the inverted index by adding postings
         for word in word_count.keys():
@@ -92,25 +100,68 @@ class InvertedIndex:
             if file.startswith("index_block_"):
                 read_buffer.append(open(f"../index/{file}", 'r'))
 
-        # Posting buffer stores the current postings we're reading in each file
-        posting_buffer = []
+        # Maintain a write buffer for the output files
+        write_buffer = defaultdict(list)
 
-        # Put in the first term from each file into the term_buffer
+        # Posting buffer stores the current postings we're reading for each file
+        postings_buffer = []
         for f in read_buffer:
             line = f.readline().rstrip('\n')
-            posting_buffer.append(eval(line))
+            postings_buffer.append(eval(line))
 
-        # Maintain a write buffer for the output files
-        print(posting_buffer)
         position = 0
+
+        while len(read_buffer) > 0:
+            # Get smallest term from the posting buffer
+            term_list = [list(posting.keys())[0]
+                         for posting in postings_buffer]
+            smallest_term = min(term_list)
+            values = []
+
+            # If term in multiple files, combine postings; append term + posting to file
+            for i, posting in enumerate(postings_buffer):
+                k, v = list(posting.items())[0]
+                if k == smallest_term:
+                    values.extend(v)
+                    line = read_buffer[i].readline().rstrip('\n')
+                    if line == "":
+                        del read_buffer[i]
+                        del postings_buffer[i]
+                    else:
+                        postings_buffer[i] = eval(line)
+
+            values = sorted(values, key=lambda x: x["doc_id"])
+            write_buffer[smallest_term] = values
+
+            # Keep track of where the term is in the file
+            self.term_pos[smallest_term] = position
+            position += 8 + len(smallest_term) + len(str(values))
+
+            # Write output buffer to disk if it reaches block size
+            if len(write_buffer) >= self.block_size:
+                filepath = "../index/inverted_index.txt"
+                self.store_in_disk(filepath, write_buffer)
+                write_buffer.clear()
+
+        # Write any remaining output buffer to disk
+        if len(write_buffer) > 0:
+            filepath = "../index/inverted_index.txt"
+            self.store_in_disk(filepath, write_buffer)
+            write_buffer.clear()
+
+        # print(self.term_pos)
 
     @staticmethod
     def store_in_disk(filepath, info):
+        # Sort posting/info by doc_id and add to file
         with open(filepath, 'a') as f:
-            # sort posting by doc_id -> sort by term -> add to file
             for k, v in sorted(info.items()):
-                sorted_values = sorted(v, key=lambda x: x["doc_id"])
-                f.write("{" + f'"{k}": {sorted_values}' + "}\n")
+                f.write("{" + f'"{k}": {v}' + "}\n")
+
+            # sort posting by doc_id -> sort by term -> add to file
+            # for k, v in sorted(info.items()):
+            #     sorted_values = sorted(v, key=lambda x: x["doc_id"])
+            #     f.write("{" + f'"{k}": {sorted_values}' + "}\n")
 
     @staticmethod
     def stem(word):
