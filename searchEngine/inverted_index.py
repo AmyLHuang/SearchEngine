@@ -27,13 +27,12 @@ class InvertedIndex:
             print(f"current root: {root}")
             for file in files:
                 if file.endswith(".json"):
-                    self.doc_id += 1
-
                     # Read the JSON file
                     with open(os.path.join(root, file), 'r') as f:
                         data = json.load(f)
 
                     # Associate url with corresponding doc_id
+                    self.doc_id += 1
                     self.doc_url[self.doc_id] = data['url']
 
                     # Analyze the file's data
@@ -45,9 +44,15 @@ class InvertedIndex:
                     self.store_in_disk(filepath, self.inverted_index)
                     self.inverted_index.clear()
 
+        # Write remaining inverted index to disk
+        if len(self.inverted_index) > 0:
+            filepath = f"../index/index_block_{self.doc_id//self.block_size+1}.txt"
+            self.store_in_disk(filepath, self.inverted_index)
+            self.inverted_index.clear()
+
+        # Perform multi-way merge of index blocks
+        self.merge_index_blocks()
         print("Finished Building Index.")
-        print("last index length = ", len(self.inverted_index))
-        print("last doc id = ", self.doc_id)
 
     def analyze_file(self, data):
         # Extract the content
@@ -78,19 +83,15 @@ class InvertedIndex:
                 self.doc_id, word_count[word], word in important_words)
             self.inverted_index[word].append(posting)
 
+    def merge_index_blocks():
+        pass
+
     @staticmethod
     def store_in_disk(filepath, info):
-        # print("inside write_to_disk function, info: ")
-        # i = 0
-        # for k, v in info.items():
-        #     i += 1
-        #     print(k, v)
-        #     if (i == 20):
-        #         break
         with open(filepath, 'a') as f:
-            # sort the dict by terms and write to file
+            # sort posting by doc_id -> sort by term -> add to file
             for k, v in sorted(info.items()):
-                print(k, sorted(v))
+                f.write("{" + f'"{k}": {sorted(v)}' + "}\n")
 
     @staticmethod
     def stem(word):

@@ -7,3 +7,6 @@ class Posting:
 
     def __lt__(self, other):
         return self.doc_id < other.doc_id
+
+    def get_docId(self):
+        return self.doc_id
