@@ -1,6 +1,6 @@
 from inverted_index import InvertedIndex
 from search import Search
-import os
+import os, time, math
 
 
 def search_query(query):
@@ -18,10 +18,14 @@ def create_inverted_index(flag=False):
 
 
 if __name__ == "__main__":
-    # if inverted index does not exist or flag is True, build ii
     create_inverted_index()
 
-    # queries
     queries = ["cristina lopes", "machine learning", "ACM"]
+    # start_time = time.time()
+    
     for query in queries:
+        print(f"Running Query - {query}")
         search_query(query)
+
+    # end_time = time.time()
+    # print(f"Finished. Total Querying Time is {end_time - start_time} seconds.")
