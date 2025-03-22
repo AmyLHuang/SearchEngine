@@ -1,6 +1,6 @@
 from inverted_index import InvertedIndex
 from search import Search
-import os, time, math
+import os, time
 
 
 def search_query(query):

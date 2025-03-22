@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="{{ url_for('web', filename='styles.css') }}">
+    <title>Home</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1><span>S</span><span>e</span><span>a</span><span>r</span><span>c</span><span>h</span><span> </span></h1>
+        <form action="/search" method="POST">
+            <label for="query"></label>
+            <input type="text" name="query" placeholder="Search...">
+            <button type="submit"><i class="fa fa-search"></i></button>
+        </form>
+    </div>
+</body>
+
+</html>

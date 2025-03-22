@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Search</title>
+    <link rel="stylesheet" href="{{ url_for('web', filename='styles.css') }}">
+</head>
+
+<body>
+    <div id="searchbar">
+        <form action="/search" method="POST">
+            <label for="query"></label>
+            <input type="text" placeholder="Search..." name="query">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
+    <h1>Showing search results for "{{query}}"</h1>
+
+    {% if result %}
+    <table>
+        <tr>
+            <th>All results: </th>
+        </tr>
+        {% for i in result %}
+        <tr>
+            <td><a href="{{ i }}">{{ i }}</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    {% else %}
+    <p>No results found!</p>
+
+    {% endif %}
+</body>
+
+</html>
