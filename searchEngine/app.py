@@ -1,9 +1,9 @@
 from flask import Flask, render_template, request
-from main import Query
+from search import Search
 import time, sys
 
-q = Query()
-docid_dict = q.getDocidUrl()
+s = Search()
+docid_dict = s.getDocidUrl()
 
 app = Flask(__name__)
 
@@ -20,7 +20,8 @@ def search():
     result = []
     if query:
         start_time = time.time()
-        doc_ids = q.querySearch(query)
+        s.search(query)
+        doc_ids = s.getResults()
         for id in doc_ids:
             result.append(docid_dict[id])
         end_time = time.time()
