@@ -19,13 +19,16 @@ class InvertedIndex:
     def init_index_dir(self) -> None:
         # clear/create directory to store partial + combined inverted index
         shutil.rmtree("../index", ignore_errors=True)
-        os.makedirs("../index")
+        if not os.path.exists("../index"):
+            os.makedirs("../index")
 
     def build_index(self) -> None:
         print(f"Building Index...")
+        total_docs = 0
         for root, dirs, files in os.walk(self.docs_dir):
             print(f"current root: {root}")
             for file in files:
+                total_docs += 1
                 if file.endswith(".json"):
                     # Read the JSON file
                     with open(os.path.join(root, file), 'r') as f:
@@ -58,6 +61,7 @@ class InvertedIndex:
         with open(f"../index/inverted_index_variables.txt", 'w') as f:
             f.write(str(self.doc_url) + "\n")
             f.write(str(self.term_pos) + "\n")
+            f.write(str(total_docs) + "\n")
     
     def analyze_file(self, data) -> None:
         # Extract the content

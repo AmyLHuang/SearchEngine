@@ -22,4 +22,5 @@ if __name__ == "__main__":
     for query in queries:
         print(f"Running Query - {query}")
         s.search(query)
+        s.printResults()
     
