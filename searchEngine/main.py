@@ -1,6 +1,6 @@
 from inverted_index import InvertedIndex
 from search import Search
-import os, time
+import os
 
 
 def create_inverted_index(flag=False):

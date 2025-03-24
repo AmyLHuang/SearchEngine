@@ -1,5 +1,6 @@
 from nltk.stem import PorterStemmer
 import math
+from inverted_index import Posting
 
 class Search:
     def __init__(self):
@@ -35,22 +36,24 @@ class Search:
                 line = inverted_index_file.readline()
             
             d = eval(line)
+            print(d)
             df = len(d.values())
             idf = math.log(self.total_docs/df, 10)
 
             for postings in d.values():
                 for posting in postings:
+                    print(posting)
                     # Calculate tf_idf for each doc: tf x idf
-                    tf_idf = (1+math.log(posting['tf'], 10)) * idf
+                    tf_idf = (1+math.log(posting.term_freq, 10)) * idf
 
                     #set the score of the doc for this term
-                    scores[posting['doc_id']-1][i] = tf_idf
+                    scores[posting.doc_id - 1][i] = tf_idf
 
                     #if the term is important in this doc, inc its score
-                    if posting['important'] == True:
-                        scores[posting['doc_id']-1][i] *= 2
+                    if posting.important == True:
+                        scores[posting.doc_id - 1][i] *= 2
                     
-                    doc_ids.add(posting["doc_id"])
+                    doc_ids.add(posting.doc_id)
             
             # If result is not empty, take the intersection between results and doc_ids to find set of docs that contain all the terms in the query
             if results:

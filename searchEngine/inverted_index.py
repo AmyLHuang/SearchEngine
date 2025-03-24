@@ -5,19 +5,19 @@ from bs4 import BeautifulSoup
 from nltk.stem import PorterStemmer
 from collections import defaultdict
 import string
-
+from posting import Posting
 
 class InvertedIndex:
-    def __init__(self, docs_dir, block_size=1000):
-        self.docs_dir = docs_dir      # directory where documents are stored
-        self.block_size = block_size  # block size to write to disk
+    def __init__(self, directory, block_size=1000):
+        self.docs_dir = directory
+        self.block_size = block_size
         self.doc_id = 0               # will be used to give unique id to each document
         self.doc_url = dict()         # map doc_id to the url
         self.inverted_index = defaultdict(list)  # map term to its posting
         self.term_pos = dict()        # map term to position in disk
 
     def init_index_dir(self) -> None:
-        # clear/create directory to store partial + combined inverted index
+        # replace/create directory to store partial + combined inverted index
         shutil.rmtree("../index", ignore_errors=True)
         if not os.path.exists("../index"):
             os.makedirs("../index")
@@ -25,6 +25,7 @@ class InvertedIndex:
     def build_index(self) -> None:
         print(f"Building Index...")
         total_docs = 0
+        doc_id = 0
         for root, dirs, files in os.walk(self.docs_dir):
             print(f"current root: {root}")
             for file in files:
@@ -35,21 +36,21 @@ class InvertedIndex:
                         data = json.load(f)
 
                     # Associate url with corresponding doc_id
-                    self.doc_id += 1
-                    self.doc_url[self.doc_id] = data['url']
+                    doc_id += 1
+                    self.doc_url[doc_id] = data['url']
 
                     # Analyze the file's data
-                    self.analyze_file(data)
+                    self.analyze_file(data, doc_id)
 
                 # If block size is reached, write inverted index to disk
-                if self.doc_id % self.block_size == 0:
-                    filepath = f"../index/index_block_{self.doc_id//self.block_size}.txt"
+                if doc_id % self.block_size == 0:
+                    filepath = f"../index/index_block_{doc_id//self.block_size}.txt"
                     self.store_in_disk(filepath, self.inverted_index)
                     self.inverted_index.clear()
 
         # Write remaining inverted index to disk
         if len(self.inverted_index) > 0:
-            filepath = f"../index/index_block_{self.doc_id//self.block_size+1}.txt"
+            filepath = f"../index/index_block_{doc_id//self.block_size+1}.txt"
             self.store_in_disk(filepath, self.inverted_index)
             self.inverted_index.clear()
 
@@ -63,7 +64,7 @@ class InvertedIndex:
             f.write(str(self.term_pos) + "\n")
             f.write(str(total_docs) + "\n")
     
-    def analyze_file(self, data) -> None:
+    def analyze_file(self, data, doc_id) -> None:
         # Extract the content
         html_raw_content = data['content']
         soup = BeautifulSoup(html_raw_content, 'html.parser')
@@ -89,12 +90,8 @@ class InvertedIndex:
 
         # Update the inverted index by adding postings
         for word in word_count.keys():
-            posting = {
-                'doc_id': self.doc_id,
-                'tf': word_count[word],
-                'important': word in important_words,
-            }
-            self.inverted_index[word].append(posting)
+            post = Posting(doc_id=doc_id, term_freq=word_count[word], important=word in important_words)
+            self.inverted_index[word].append(post)
 
     def merge_index_blocks(self) -> None:
         # Open all partial index files and maintain a read buffer for each one
@@ -137,7 +134,7 @@ class InvertedIndex:
                         postings_buffer[i] = eval(line)
 
             # sort the postings by doc_id and then put in the write_buffer
-            values = sorted(values, key=lambda x: x["doc_id"])
+            values = sorted(values, key=lambda x: x.doc_id)
             write_buffer[smallest_term] = values
 
             # Keep track of where the term is in the file
@@ -172,3 +169,4 @@ class InvertedIndex:
             string.punctuation + string.whitespace + "‘’“”")
 
         return strip_stem_word
+    
