@@ -6,15 +6,15 @@ import os
 def create_inverted_index(flag=False):
     indexExists = os.path.exists("../index")
     if not indexExists or flag:
-        ii = InvertedIndex("../documents/test", 10)
+        ii = InvertedIndex(block_size=10)
         ii.init_index_dir()
-        ii.build_index()
+        ii.build_index(parent_directory="../documents/test")
     else:
         print("Index already exists.")
 
 
 if __name__ == "__main__":
-    create_inverted_index()
+    create_inverted_index(False)
 
     queries = ["cristina lopes", "machine learning", "ACM"]
     s = Search()

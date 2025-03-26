@@ -23,7 +23,7 @@ def search():
         s.search(query)
         doc_ids = s.getResults()
         for id in doc_ids:
-            result.append(docid_dict[id])
+            result.append(docid_dict[str(id)])
         end_time = time.time()
         print(f"--- {end_time - start_time} seconds ---", file=sys.stderr)
     return render_template('search.html', query=query, result=result, docid_dict=docid_dict)
