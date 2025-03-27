@@ -3,18 +3,17 @@ from search import Search
 import os
 
 
-def create_inverted_index(flag=False):
+def create_inverted_index(replace=False):
     indexExists = os.path.exists("../index")
-    if not indexExists or flag:
+    if not indexExists or replace:
         ii = InvertedIndex(block_size=10)
-        ii.init_index_dir()
-        ii.build_index(parent_directory="../documents/test")
+        ii.build_index(parent_dir="../documents/test", debug=True)
     else:
         print("Index already exists.")
 
 
 if __name__ == "__main__":
-    create_inverted_index(False)
+    create_inverted_index(True)
 
     queries = ["cristina lopes", "machine learning", "ACM"]
     s = Search()

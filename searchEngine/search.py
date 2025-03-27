@@ -1,6 +1,5 @@
 from nltk.stem import PorterStemmer
 import math, json, string, re
-from posting import Posting
 
 class Search:
     def __init__(self):
@@ -9,7 +8,7 @@ class Search:
         with open("../index/metadata.json") as f:
             jsonData = json.load(f)
         self.doc_id_to_url = jsonData["doc_id_to_url"]
-        self.term_pos = jsonData["term_pos"]
+        self.term_positions = jsonData["term_positions"]
         self.total_docs = jsonData["total_docs"]
         
     def search(self, query):
@@ -26,35 +25,34 @@ class Search:
             else:
                 weights.append(1 + math.log(query.count(term), 10))
 
-            stemmed_term = self.stem(term)
-            if stemmed_term not in self.term_pos:
+            stemmed_term = self._stem(term)
+            if stemmed_term not in self.term_positions:
                 continue
 
             # Retrieve term and its posting list from index file
-            inverted_index_file.seek(self.term_pos[stemmed_term])
+            inverted_index_file.seek(self.term_positions[stemmed_term])
 
             line = inverted_index_file.readline()
-            if line.split(":")[0][2:-1] != term:
-                line = inverted_index_file.readline()
             
-            d = eval(line)
+            d = json.loads(line)
             df = len(d.values())
             idf = math.log(self.total_docs/df, 10)
 
+            print(d.keys())
             for postings in d.values():
                 for posting in postings:
                     print(posting)
                     # Calculate tf_idf for each doc: tf x idf
-                    tf_idf = (1+math.log(posting.term_freq, 10)) * idf
+                    tf_idf = (1+math.log(posting["term_freq"], 10)) * idf
 
                     #set the score of the doc for this term
-                    scores[posting.doc_id - 1][i] = tf_idf
+                    scores[posting["doc_id"] - 1][i] = tf_idf
 
                     #if the term is important in this doc, inc its score
-                    if posting.important == True:
-                        scores[posting.doc_id - 1][i] *= 2
+                    if posting["important"] == True:
+                        scores[posting["doc_id"] - 1][i] *= 2
                     
-                    doc_ids.add(posting.doc_id)
+                    doc_ids.add(posting["doc_id"])
             
             # If result is not empty, take the intersection between results and doc_ids to find set of docs that contain all the terms in the query
             if results:
@@ -98,7 +96,7 @@ class Search:
         return self.doc_id_to_url
 
     @staticmethod
-    def stem(word) -> str:
+    def _stem(word) -> str:
         strip_word = word.strip(string.punctuation + string.whitespace + "‘’“”")
         stem_word = PorterStemmer().stem(strip_word)
         strip_stem_word = stem_word.strip( string.punctuation + string.whitespace + "‘’“”")
