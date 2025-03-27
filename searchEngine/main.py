@@ -13,9 +13,9 @@ def create_inverted_index(replace=False):
 
 
 if __name__ == "__main__":
-    create_inverted_index(True)
+    create_inverted_index()
 
-    queries = ["cristina lopes", "machine learning", "ACM"]
+    queries = ["cristina lopes", "machine learning", "ACM" ,"master of software engineering"]
     s = Search()
     
     for query in queries:

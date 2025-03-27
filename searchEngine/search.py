@@ -2,9 +2,23 @@ from nltk.stem import PorterStemmer
 import math, json, string, re
 
 class Search:
+    """
+    A Search class that performs full-text search using an inverted index.
+
+    Attributes:
+        - sorted_results (list): Stores ranked search results.
+        - doc_id_to_url (dict): Maps document IDs to their URLs.
+        - term_positions (dict): Byte positions of terms in the index file.
+        - total_docs (int): Total number of documents indexed.
+        
+    Methods:
+        - search(query): Processes a query, retrieves relevant documents, and ranks them.
+        - print_results(): Prints the URLs of ranked documents.
+        - get_results(): Returns the ranked document IDs.
+        - get_docid_url(): Returns the document ID-to-URL mapping.
+    """
     def __init__(self):
         self.sorted_results = set()
-        
         with open("../index/metadata.json") as f:
             jsonData = json.load(f)
         self.doc_id_to_url = jsonData["doc_id_to_url"]
@@ -12,40 +26,31 @@ class Search:
         self.total_docs = jsonData["total_docs"]
         
     def search(self, query):
+        """Search for documents matching the given query and rank results."""
         results = set()
         query_words = re.split(r'[ (){};,\s-]+', query.lower())
         scores = [[0]*len(query_words) for _ in range(self.total_docs)]
-        weights = []
+        weights = [1]*len(query_words)
         inverted_index_file = open("../index/inverted_index.txt")
 
         for i, term in enumerate(query_words):
-            doc_ids = set()
-            if query.count(term) == 0:
-                weights.append(1)
-            else:
-                weights.append(1 + math.log(query.count(term), 10))
-
             stemmed_term = self._stem(term)
             if stemmed_term not in self.term_positions:
                 continue
 
-            # Retrieve term and its posting list from index file
+            if query.count(term) > 0:
+                weights[i] += math.log(query.count(term), 10)
+
+            # Retrieve postings list from the index file
             inverted_index_file.seek(self.term_positions[stemmed_term])
-
             line = inverted_index_file.readline()
+            entry = json.loads(line)
+            idf = math.log(self.total_docs/len(entry.values()), 10)
             
-            d = json.loads(line)
-            df = len(d.values())
-            idf = math.log(self.total_docs/df, 10)
-
-            print(d.keys())
-            for postings in d.values():
+            doc_ids = set()
+            for postings in entry.values():
                 for posting in postings:
-                    print(posting)
-                    # Calculate tf_idf for each doc: tf x idf
                     tf_idf = (1+math.log(posting["term_freq"], 10)) * idf
-
-                    #set the score of the doc for this term
                     scores[posting["doc_id"] - 1][i] = tf_idf
 
                     #if the term is important in this doc, inc its score
@@ -81,18 +86,20 @@ class Search:
                 temp += (w * s)
             scores[doc] = temp
 
-        # for the docids, sort by cosine score
+        # for the doc_ids, sort by cosine score
         self.sorted_results = sorted(results, key=lambda x: scores[x-1], reverse=True)
 
-
     def printResults(self):
+        """Prints the URLs of ranked search results."""
         for r in self.sorted_results:
             print(self.doc_id_to_url[str(r)])
 
     def getResults(self):
+        """Returns the ranked document IDs."""
         return self.sorted_results
 
-    def getDocidUrl(self):
+    def getDocIdToUrl(self):
+        """Returns the document ID-to-URL mapping."""
         return self.doc_id_to_url
 
     @staticmethod
