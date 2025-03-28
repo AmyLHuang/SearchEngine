@@ -20,6 +20,19 @@ a:visited {
     color: blue;
 }
 
+button[type=submit] {
+    background-color: #267ddb;
+    color: white;
+    font-size: 14px;
+    border: none;
+    border-radius: 0 10px 10px 0;
+    cursor: pointer;
+}
+
+button[type=submit]:hover {
+    background-color: #2069b7;
+}
+
 /* Home Page */
 
 .search-text {
@@ -43,19 +56,6 @@ a:visited {
     border: 2px solid #ccc;
     border-radius: 10px 0 0 10px;
     outline: none;
-}
-
-button[type=submit] {
-    background-color: #267ddb;
-    color: white;
-    font-size: 14px;
-    border: none;
-    border-radius: 0 10px 10px 0;
-    cursor: pointer;
-}
-
-button[type=submit]:hover {
-    background-color: #2069b7;
 }
 
 .search-form .fa-search {
@@ -105,7 +105,3 @@ th {
 tr:hover {
     background-color: #e6f2ff;
 }
-
-
-
-

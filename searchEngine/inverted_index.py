@@ -14,7 +14,6 @@ class InvertedIndex:
         - map_doc_id_to_url (dict): A mapping of document IDs to their corresponding URLs.
 
     Methods:
-        - init_index_dir(): Initializes or resets the index directory.
         - build_index(parent_dir, debug=False): Constructs the inverted index from documents.
     """
     def __init__(self, block_size=1000):
