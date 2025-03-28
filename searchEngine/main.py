@@ -7,7 +7,7 @@ def create_inverted_index(replace=False):
     indexExists = os.path.exists("../index")
     if not indexExists or replace:
         ii = InvertedIndex(block_size=10)
-        ii.build_index(parent_dir="../documents/test", debug=True)
+        ii.build_index(parent_dir="../documents/analyst", debug=True)
     else:
         print("Index already exists.")
 

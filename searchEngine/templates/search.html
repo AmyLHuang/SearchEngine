@@ -1,29 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <title>Search</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Search</title>
 </head>
 
 <body>
-    <div id="searchbar">
-        <form action="/search" method="POST">
-            <label for="query"></label>
-            <input type="text" placeholder="Search..." name="query">
-            <button type="submit">Search</button>
-        </form>
-    </div>
+    <form class="searchbar-form" action="/search" method="POST">
+        <label for="query"></label>
+        <input type="text" name="query" placeholder="Search...">
+        <button type="submit"><i class="fa fa-search"></i></button>
+    </form>
 
-    <h1>Showing search results for "{{query}}"</h1>
+    <h1>"{{ query }}"</h1>
 
     {% if result %}
     <table>
         <tr>
-            <th>All results: </th>
+            <th></th>
+            <th>Total Results: {{ result|length }}</th>
         </tr>
         {% for i in result %}
         <tr>
+            <td>{{ loop.index }}</td> <!-- Incrementing index -->
             <td><a href="{{ i }}">{{ i }}</a></td>
         </tr>
         {% endfor %}
