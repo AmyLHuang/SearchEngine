@@ -53,7 +53,8 @@ index.build_index("path/to/documents", debug=True)
 
 ```
 from inverted_index import InvertedIndex
-ii = InvertedIndex(block_size=10) ii.build_index(parent_dir="../documents/analyst", debug=True)
+ii = InvertedIndex(block_size=10)
+ii.build_index(parent_dir="../documents/analyst", debug=True)
 ```
 
 ### Running the Search Engine
